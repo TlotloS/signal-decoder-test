@@ -1,0 +1,127 @@
+name: Signal Decoder Assessment
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout solution
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Run unit tests
+        run: dotnet test tests/SignalDecoder.UnitTests --no-build --logger "console;verbosity=normal"
+
+      - name: Run assessment tests
+        if: always()
+        run: |
+          dotnet test tests/SignalDecoder.AssessmentTests --no-build \
+            --logger "console;verbosity=normal" \
+            --logger "trx;LogFileName=results.trx" \
+            --results-directory TestResults
+
+      - name: Generate results summary
+        if: always()
+        run: |
+          echo "## 📊 Assessment Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ ! -f "TestResults/results.trx" ]; then
+            echo "⚠️ No assessment test results found" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          python3 << 'PYEOF' >> $GITHUB_STEP_SUMMARY
+          import xml.etree.ElementTree as ET
+          import os
+
+          trx_path = "TestResults/results.trx"
+          if not os.path.exists(trx_path):
+              print("No test results file found")
+              exit(0)
+
+          tree = ET.parse(trx_path)
+          root = tree.getroot()
+          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+
+          counters = root.find('.//t:Counters', ns)
+          if counters is None:
+              print("Could not parse test results")
+              exit(0)
+
+          total = int(counters.get('total', 0))
+          passed = int(counters.get('passed', 0))
+          failed = int(counters.get('failed', 0))
+
+          pct = round(passed / total * 100) if total > 0 else 0
+
+          print(f"### Score: {passed}/{total} ({pct}%)")
+          print("")
+
+          if failed == 0:
+              print("✅ **All tests passed!**")
+          else:
+              print(f"❌ **{failed} test(s) failed**")
+
+          print("")
+          print("| Test | Result | Duration |")
+          print("|------|--------|----------|")
+
+          results = root.find('.//t:Results', ns)
+          if results is not None:
+              for r in results.findall('t:UnitTestResult', ns):
+                  name = r.get('testName', 'Unknown')
+                  # Show only the method name
+                  short_name = name.split('.')[-1] if '.' in name else name
+                  outcome = r.get('outcome', 'Unknown')
+                  duration = r.get('duration', '0')
+
+                  icon = "✅" if outcome == "Passed" else "❌" if outcome == "Failed" else "⏭️"
+                  print(f"| {short_name} | {icon} {outcome} | {duration} |")
+
+          # Category breakdown
+          print("")
+          print("### Category Breakdown")
+          print("")
+
+          categories = {}
+          if results is not None:
+              for r in results.findall('t:UnitTestResult', ns):
+                  name = r.get('testName', '')
+                  outcome = r.get('outcome', '')
+                  # Extract class name as category
+                  parts = name.split('.')
+                  cat = parts[-2] if len(parts) >= 2 else "Other"
+                  if cat not in categories:
+                      categories[cat] = {"passed": 0, "failed": 0, "total": 0}
+                  categories[cat]["total"] += 1
+                  if outcome == "Passed":
+                      categories[cat]["passed"] += 1
+                  else:
+                      categories[cat]["failed"] += 1
+
+          for cat, counts in categories.items():
+              icon = "✅" if counts["failed"] == 0 else "❌"
+              print(f"- {icon} **{cat}**: {counts['passed']}/{counts['total']}")
+
+          PYEOF
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
