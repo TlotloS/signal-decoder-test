@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SignalDecoder.Api</name>
+    </assembly>
+    <members>
+        <member name="M:SignalDecoder.Api.Controllers.DevicesController.Generate(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Generates a random set of devices with signal patterns
+            </summary>
+            <param name="count">Number of devices to generate (default: 5)</param>
+            <param name="signalLength">Length of each signal pattern (default: 4)</param>
+            <param name="maxStrength">Maximum signal strength value (default: 9)</param>
+            <returns>Dictionary of device IDs and their signal patterns</returns>
+        </member>
+        <member name="M:SignalDecoder.Api.Controllers.SignalController.Simulate(SignalDecoder.Domain.Models.SimulateRequest)">
+             <summary>
+             Simulates a signal transmission by randomly selecting active devices
+             </summary>
+             <remarks>
+             This endpoint simulates a real-world scenario where multiple devices can transmit simultaneously.
+            
+             **How it works:**
+             1. Provide a dictionary of devices with their signal patterns
+             2. The simulator randomly selects 1 to N devices to be "active"
+             3. It computes the combined signal by summing the patterns position by position
+             4. Returns the combined signal WITHOUT revealing which devices were active
+            
+             **Example Use Case:**
+             You can use the generated devices from `/api/devices/generate` and pass them here
+             to simulate a transmission, then use the result in `/api/signal/decode` to solve
+             which devices were transmitting.
+            
+             **Signal Pattern Format:**
+             - Each device has an array of integers (signal pattern)
+             - All patterns must be the same length
+             - Values are non-negative integers
+             - The combined signal is the element-wise sum of active device patterns
+             </remarks>
+             <param name="request">Dictionary of devices with their signal patterns</param>
+             <returns>Combined signal from randomly selected devices</returns>
+        </member>
+        <member name="M:SignalDecoder.Api.Controllers.SignalController.Decode(SignalDecoder.Domain.Models.DecodeRequest)">
+             <summary>
+             Decodes a received signal to identify which devices transmitted it
+             </summary>
+             <remarks>
+             This endpoint solves the signal decoding problem: given a combined signal,
+             find all possible combinations of devices that could have produced it.
+            
+             **How it works:**
+             1. Provide the dictionary of all possible devices
+             2. Provide the received (combined) signal
+             3. Optionally set a tolerance for fuzzy matching
+             4. The decoder finds ALL device combinations whose sum matches the received signal
+            
+             **Algorithm Features:**
+             - Uses backtracking with intelligent pruning for efficiency
+             - Returns ALL valid solutions (there may be multiple combinations)
+             - Includes solve time in milliseconds for performance analysis
+             - Handles up to 25 devices efficiently (under 5 seconds)
+            
+             **Tolerance Parameter:**
+             - `tolerance = 0`: Exact match required (default)
+             - `tolerance = 1`: Allows ±1 difference at each position
+             - Higher tolerance finds more solutions but may include inexact matches
+            
+             **Example Workflow:**
+             1. Generate devices: `GET /api/devices/generate?count=5`
+             2. Simulate signal: `POST /api/signal/simulate` (with generated devices)
+             3. Decode signal: `POST /api/signal/decode` (with simulated signal)
+             4. Verify: One of the solutions should match the simulated transmission
+             </remarks>
+             <param name="request">Decode request with devices, received signal, and tolerance</param>
+             <returns>All possible solutions showing which device combinations match the received signal</returns>
+        </member>
+    </members>
+</doc>

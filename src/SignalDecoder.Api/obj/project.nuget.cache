@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "PsHD1F4YUkI=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\tlotlo.B1SA\\RiderProjects\\SignalDocoderAssessment\\src\\SignalDecoder.Api\\SignalDecoder.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.21\\microsoft.aspnetcore.openapi.8.0.21.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\2.1.0\\microsoft.extensions.dependencyinjection.2.1.0.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\3.1.9\\microsoft.extensions.dependencyinjection.abstractions.3.1.9.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\microsoft.extensions.dependencymodel\\3.1.6\\microsoft.extensions.dependencymodel.3.1.6.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\microsoft.openapi\\1.6.14\\microsoft.openapi.1.6.14.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\scrutor\\3.3.0\\scrutor.3.3.0.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\swashbuckle.aspnetcore\\6.6.2\\swashbuckle.aspnetcore.6.6.2.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\swashbuckle.aspnetcore.filters\\8.0.0\\swashbuckle.aspnetcore.filters.8.0.0.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\swashbuckle.aspnetcore.filters.abstractions\\8.0.0\\swashbuckle.aspnetcore.filters.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.6.2\\swashbuckle.aspnetcore.swagger.6.6.2.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.6.2\\swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.6.2\\swashbuckle.aspnetcore.swaggerui.6.6.2.nupkg.sha512",
+    "C:\\Users\\tlotlo.B1SA\\.nuget\\packages\\system.text.json\\4.7.2\\system.text.json.4.7.2.nupkg.sha512"
+  ],
+  "logs": []
+}

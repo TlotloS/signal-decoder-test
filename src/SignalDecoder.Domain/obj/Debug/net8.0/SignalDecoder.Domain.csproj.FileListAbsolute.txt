@@ -1,0 +1,11 @@
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\bin\Debug\net8.0\SignalDecoder.Domain.deps.json
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\bin\Debug\net8.0\SignalDecoder.Domain.dll
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\bin\Debug\net8.0\SignalDecoder.Domain.pdb
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\SignalDecoder.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\SignalDecoder.Domain.AssemblyInfoInputs.cache
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\SignalDecoder.Domain.AssemblyInfo.cs
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\SignalDecoder.Domain.csproj.CoreCompileInputs.cache
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\SignalDecoder.Domain.dll
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\refint\SignalDecoder.Domain.dll
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\SignalDecoder.Domain.pdb
+C:\Users\tlotlo.B1SA\RiderProjects\SignalDocoderAssessment\src\SignalDecoder.Domain\obj\Debug\net8.0\ref\SignalDecoder.Domain.dll
