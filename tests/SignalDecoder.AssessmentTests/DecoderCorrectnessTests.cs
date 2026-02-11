@@ -1,14 +1,23 @@
 namespace SignalDecoder.AssessmentTests;
 
-using SignalDecoder.Application.Services;
 using SignalDecoder.Domain.Models;
 
-public class DecoderCorrectnessTests
+public class DecoderCorrectnessTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly SignalDecoderService _solver = new();
+    private readonly HttpClient _client;
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    public DecoderCorrectnessTests(WebApplicationFactory<Program> factory)
+    {
+        _client = factory.CreateClient();
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+    }
 
     [Fact]
-    public void Decode_FiveDevices_FindsCorrectThree()
+    public async Task Decode_FiveDevices_FindsCorrectThree()
     {
         // Pre-computed: D01 + D03 + D05 = received
         var request = new DecodeRequest
@@ -25,18 +34,21 @@ public class DecoderCorrectnessTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.True(result.Solutions.Count >= 1);
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Count.Should().BeGreaterOrEqualTo(1);
         var solution = result.Solutions[0];
-        Assert.Equal(3, solution.TransmittingDevices.Count);
-        Assert.Contains("D01", solution.TransmittingDevices);
-        Assert.Contains("D03", solution.TransmittingDevices);
-        Assert.Contains("D05", solution.TransmittingDevices);
+        solution.TransmittingDevices.Count.Should().Be(3);
+        solution.TransmittingDevices.Should().Contain("D01");
+        solution.TransmittingDevices.Should().Contain("D03");
+        solution.TransmittingDevices.Should().Contain("D05");
     }
 
     [Fact]
-    public void Decode_MultipleSolutions_ReturnsAll()
+    public async Task Decode_MultipleSolutions_ReturnsAll()
     {
         // Short signal length with values designed so multiple subsets match
         // D01 + D02 = [5, 5] and D03 = [5, 5]
@@ -52,14 +64,17 @@ public class DecoderCorrectnessTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.True(result.Solutions.Count >= 2,
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Count.Should().BeGreaterOrEqualTo(2,
             $"Expected at least 2 solutions but got {result.Solutions.Count}");
     }
 
     [Fact]
-    public void Decode_EmptySubset_ZeroSignal()
+    public async Task Decode_EmptySubset_ZeroSignal()
     {
         // Received signal is all zeros — the "no devices active" case
         var request = new DecodeRequest
@@ -73,15 +88,18 @@ public class DecoderCorrectnessTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
         // Should find exactly one solution: the empty set
-        Assert.Single(result.Solutions);
-        Assert.Empty(result.Solutions[0].TransmittingDevices);
+        result!.Solutions.Should().ContainSingle();
+        result.Solutions[0].TransmittingDevices.Should().BeEmpty();
     }
 
     [Fact]
-    public void Decode_VerifiesComputedSum()
+    public async Task Decode_VerifiesComputedSum()
     {
         var request = new DecodeRequest
         {
@@ -95,15 +113,18 @@ public class DecoderCorrectnessTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.Single(result.Solutions);
-        Assert.Equal([4, 6, 6], result.Solutions[0].ComputedSum);
-        Assert.True(result.Solutions[0].MatchesReceived);
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Should().ContainSingle();
+        result.Solutions[0].ComputedSum.Should().Equal([4, 6, 6]);
+        result.Solutions[0].MatchesReceived.Should().BeTrue();
     }
 
     [Fact]
-    public void Decode_IncludesSolveTime()
+    public async Task Decode_IncludesSolveTime()
     {
         var request = new DecodeRequest
         {
@@ -116,13 +137,16 @@ public class DecoderCorrectnessTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.True(result.SolveTimeMs >= 0, "SolveTimeMs should be populated");
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.SolveTimeMs.Should().BeGreaterOrEqualTo(0, "SolveTimeMs should be populated");
     }
 
     [Fact]
-    public void Decode_ReportsCorrectSolutionCount()
+    public async Task Decode_ReportsCorrectSolutionCount()
     {
         var request = new DecodeRequest
         {
@@ -136,8 +160,11 @@ public class DecoderCorrectnessTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.Equal(result.Solutions.Count, result.SolutionCount);
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.SolutionCount.Should().Be(result.Solutions.Count);
     }
 }

@@ -1,14 +1,23 @@
 namespace SignalDecoder.AssessmentTests;
 
-using SignalDecoder.Application.Services;
 using SignalDecoder.Domain.Models;
 
-public class DecoderToleranceTests
+public class DecoderToleranceTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly SignalDecoderService _solver = new();
+    private readonly HttpClient _client;
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    public DecoderToleranceTests(WebApplicationFactory<Program> factory)
+    {
+        _client = factory.CreateClient();
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+    }
 
     [Fact]
-    public void Decode_WithTolerance_FindsFuzzyMatch()
+    public async Task Decode_WithTolerance_FindsFuzzyMatch()
     {
         // Exact sum of D01 + D02 = [4, 6, 6]
         // Received is [4, 7, 6] — off by 1 at position 1
@@ -24,17 +33,20 @@ public class DecoderToleranceTests
             Tolerance = 1
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.True(result.Solutions.Count >= 1, "Should find at least one fuzzy match");
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Count.Should().BeGreaterOrEqualTo(1, "Should find at least one fuzzy match");
         var hasD01D02 = result.Solutions.Any(s =>
             s.TransmittingDevices.Contains("D01") &&
             s.TransmittingDevices.Contains("D02"));
-        Assert.True(hasD01D02, "D01 + D02 should be a valid fuzzy match");
+        hasD01D02.Should().BeTrue("D01 + D02 should be a valid fuzzy match");
     }
 
     [Fact]
-    public void Decode_WithTolerance_RejectsOutOfRange()
+    public async Task Decode_WithTolerance_RejectsOutOfRange()
     {
         // D01 + D02 = [4, 6, 6], received = [4, 9, 6] — off by 3 at position 1
         // Tolerance of 1 should NOT match
@@ -49,17 +61,20 @@ public class DecoderToleranceTests
             Tolerance = 1
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var hasD01D02 = result.Solutions.Any(s =>
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        var hasD01D02 = result!.Solutions.Any(s =>
             s.TransmittingDevices.Contains("D01") &&
             s.TransmittingDevices.Contains("D02") &&
             s.TransmittingDevices.Count == 2);
-        Assert.False(hasD01D02, "D01 + D02 should NOT match — difference exceeds tolerance");
+        hasD01D02.Should().BeFalse("D01 + D02 should NOT match — difference exceeds tolerance");
     }
 
     [Fact]
-    public void Decode_ToleranceZero_ExactMatchOnly()
+    public async Task Decode_ToleranceZero_ExactMatchOnly()
     {
         var request = new DecodeRequest
         {
@@ -72,12 +87,15 @@ public class DecoderToleranceTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var hasD01D02 = result.Solutions.Any(s =>
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        var hasD01D02 = result!.Solutions.Any(s =>
             s.TransmittingDevices.Contains("D01") &&
             s.TransmittingDevices.Contains("D02") &&
             s.TransmittingDevices.Count == 2);
-        Assert.False(hasD01D02, "With tolerance 0, off-by-one should not match");
+        hasD01D02.Should().BeFalse("With tolerance 0, off-by-one should not match");
     }
 }

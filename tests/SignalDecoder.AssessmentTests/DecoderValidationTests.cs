@@ -1,14 +1,23 @@
 namespace SignalDecoder.AssessmentTests;
 
-using SignalDecoder.Application.Services;
 using SignalDecoder.Domain.Models;
 
-public class DecoderValidationTests
+public class DecoderValidationTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly SignalDecoderService _solver = new();
+    private readonly HttpClient _client;
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    public DecoderValidationTests(WebApplicationFactory<Program> factory)
+    {
+        _client = factory.CreateClient();
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+    }
 
     [Fact]
-    public void Decode_NoSolution_ReturnsEmptySolutions()
+    public async Task Decode_NoSolution_ReturnsEmptySolutions()
     {
         var request = new DecodeRequest
         {
@@ -21,14 +30,17 @@ public class DecoderValidationTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.Empty(result.Solutions);
-        Assert.Equal(0, result.SolutionCount);
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Should().BeEmpty();
+        result.SolutionCount.Should().Be(0);
     }
 
     [Fact]
-    public void Decode_LargerSignalLength_StillWorks()
+    public async Task Decode_LargerSignalLength_StillWorks()
     {
         var request = new DecodeRequest
         {
@@ -42,18 +54,21 @@ public class DecoderValidationTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.True(result.Solutions.Count >= 1);
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Count.Should().BeGreaterOrEqualTo(1);
         var hasD01D02 = result.Solutions.Any(s =>
             s.TransmittingDevices.Contains("D01") &&
             s.TransmittingDevices.Contains("D02") &&
             s.TransmittingDevices.Count == 2);
-        Assert.True(hasD01D02);
+        hasD01D02.Should().BeTrue();
     }
 
     [Fact]
-    public void Decode_SingleDeviceInList_CanMatch()
+    public async Task Decode_SingleDeviceInList_CanMatch()
     {
         var request = new DecodeRequest
         {
@@ -65,15 +80,18 @@ public class DecoderValidationTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.Single(result.Solutions);
-        Assert.Single(result.Solutions[0].TransmittingDevices);
-        Assert.Contains("D01", result.Solutions[0].TransmittingDevices);
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Should().ContainSingle();
+        result.Solutions[0].TransmittingDevices.Should().ContainSingle();
+        result.Solutions[0].TransmittingDevices.Should().Contain("D01");
     }
 
     [Fact]
-    public void Decode_DecodedSignals_ContainsCorrectPatterns()
+    public async Task Decode_DecodedSignals_ContainsCorrectPatterns()
     {
         var request = new DecodeRequest
         {
@@ -87,12 +105,15 @@ public class DecoderValidationTests
             Tolerance = 0
         };
 
-        var result = _solver.Decode(request);
+        var response = await _client.PostAsJsonAsync("/api/signal/decode", request);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Assert.Single(result.Solutions);
+        var result = await response.Content.ReadFromJsonAsync<DecodeResponse>(_jsonOptions);
+        result.Should().NotBeNull();
+        result!.Solutions.Should().ContainSingle();
         var decoded = result.Solutions[0].DecodedSignals;
-        Assert.Equal(2, decoded.Count);
-        Assert.Equal([3, 1, 4], decoded["D01"]);
-        Assert.Equal([1, 5, 2], decoded["D02"]);
+        decoded.Should().HaveCount(2);
+        decoded["D01"].Should().Equal([3, 1, 4]);
+        decoded["D02"].Should().Equal([1, 5, 2]);
     }
 }
