@@ -29,6 +29,7 @@ public class DevicesController : ControllerBase
         [FromQuery] int signalLength = 4,
         [FromQuery] int maxStrength = 9)
     {
+    
         // Validation
         if (count < 1 || count > 100)
             return BadRequest("Count must be between 1 and 100.");
