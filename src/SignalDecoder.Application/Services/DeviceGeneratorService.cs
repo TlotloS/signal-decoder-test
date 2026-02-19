@@ -11,6 +11,7 @@ public class DeviceGeneratorService : IDeviceGeneratorService
         _random = seed.HasValue ? new Random(seed.Value) : new Random();
     }
 
+
     public Dictionary<string, int[]> GenerateDevices(int count, int signalLength, int maxStrength)
     {
         var devices = new Dictionary<string, int[]>();
